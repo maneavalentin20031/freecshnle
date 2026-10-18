@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bekijk op de website</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(94, 50, 160, 0.35) 0%, transparent 45%),
+      radial-gradient(circle at 85% 100%, rgba(34, 197, 94, 0.18) 0%, transparent 50%),
+      linear-gradient(180deg, #0d1512 0%, #0a1210 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    padding-top: max(24px, env(safe-area-inset-top));
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  .wrap {
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; animation: fadeIn .25s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .icon {
+    width: 76px; height: 76px;
+    margin: 0 auto 26px;
+    border-radius: 22px;
+    background: rgba(34,197,94,0.12);
+    border: 1px solid rgba(34,197,94,0.4);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 50px rgba(34,197,94,0.35);
+  }
+  .icon svg { width: 38px; height: 38px; }
+
+  h1 {
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+    color: #22c55e;
+    margin-bottom: 12px;
+  }
+
+  p {
+    font-size: 16px;
+    line-height: 1.5;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 30px;
+  }
+
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%;
+    padding: 18px;
+    border: none;
+    border-radius: 16px;
+    font-family: inherit;
+    font-size: 18px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform .15s ease, background .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn svg { width: 20px; height: 20px; }
+
+  .btn-primary {
+    background: #22c55e;
+    color: #000;
+    box-shadow: 0 8px 30px rgba(34,197,94,0.4);
+  }
+  .btn-primary:hover { background: #1cae52; }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.06);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+  .btn-row { display: flex; gap: 12px; }
+  .btn-row .btn { flex: 1; }
+
+  .note {
+    margin-top: 18px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+  }
+
+  .reassure-box {
+    background: rgba(34,197,94,0.08);
+    border: 1px solid rgba(34,197,94,0.25);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 24px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: rgba(255,255,255,0.85);
+    text-align: left;
+  }
+  .reassure-box strong { color: #22c55e; }
+
+  /* ===== Exit-intent modal ===== */
+  .exit-overlay {
+    position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.78);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s ease;
+  }
+  .exit-overlay.open { opacity: 1; pointer-events: auto; }
+  .exit-modal {
+    width: 100%; max-width: 380px;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(34,197,94,0.2) 0%, transparent 60%),
+      linear-gradient(180deg, #121a16 0%, #0d1512 100%);
+    border: 1px solid rgba(34,197,94,0.4);
+    border-radius: 22px;
+    padding: 32px 24px 24px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 60px rgba(34,197,94,0.2);
+    transform: translateY(20px) scale(0.96);
+    transition: transform .3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .exit-overlay.open .exit-modal { transform: translateY(0) scale(1); }
+
+  .exit-badge {
+    width: 64px; height: 64px;
+    margin: 0 auto 18px;
+    border-radius: 18px;
+    background: rgba(34,197,94,0.15);
+    border: 1px solid rgba(34,197,94,0.45);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+    box-shadow: 0 0 30px rgba(34,197,94,0.3);
+  }
+  .exit-modal h2 {
+    font-size: 26px; font-weight: 900; line-height: 1.15;
+    color: #22c55e; margin-bottom: 10px;
+    letter-spacing: -0.5px;
+  }
+  .exit-modal p {
+    font-size: 15px; line-height: 1.55;
+    color: rgba(255,255,255,0.78); margin-bottom: 18px;
+  }
+  .exit-benefits {
+    background: rgba(34,197,94,0.08);
+    border: 1px solid rgba(34,197,94,0.22);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    text-align: left;
+  }
+  .exit-benefit {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 14px; color: rgba(255,255,255,0.9);
+    padding: 4px 0;
+  }
+  .exit-benefit .check {
+    width: 20px; height: 20px; flex-shrink: 0;
+    border-radius: 50%; background: #22c55e;
+    display: flex; align-items: center; justify-content: center;
+    color: #000; font-weight: 900; font-size: 13px;
+  }
+  .exit-leave {
+    margin-top: 12px;
+    background: none; border: none;
+    color: rgba(255,255,255,0.4);
+    font-family: inherit; font-size: 13px;
+    cursor: pointer; padding: 10px;
+    text-decoration: underline;
+  }
+  .exit-leave:hover { color: rgba(255,255,255,0.6); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div id="ageScreen" class="screen active">
+    <div class="icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 8v4l3 2"/>
+      </svg>
+    </div>
+
+    <h1>Ben je 21 jaar<br>of ouder?</h1>
+    <p>We vragen dit om de juiste aanbiedingen voor jou te tonen.</p>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="showReassure()">Nee</button>
+      <button class="btn btn-primary" onclick="goToLander()">Ja</button>
+    </div>
+
+    <div class="note">🔒 100% veilig</div>
+  </div>
+
+  <div id="reassureScreen" class="screen">
+    <div class="icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 6L9 17l-5-5"/>
+      </svg>
+    </div>
+
+    <h1>Geen zorgen!</h1>
+    <p>21 jaar is <strong>niet verplicht</strong>. Je kan ook deelnemen als je jonger bent &mdash; er zijn genoeg aanbiedingen beschikbaar.</p>
+
+    <div class="reassure-box">
+      ✅ <strong>Open voor iedereen</strong> &mdash; speel games, voltooi taken en verdien beloningen, ongeacht je leeftijd.
+    </div>
+
+    <button class="btn btn-primary" onclick="goToLander()">
+      Ga verder naar de website
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+    </button>
+
+    <div class="note">🔒 100% veilig</div>
+  </div>
+
+</div>
+
+<!-- Exit-intent popup -->
+<div class="exit-overlay" id="exitOverlay" role="dialog" aria-modal="true" aria-labelledby="exitTitle">
+  <div class="exit-modal">
+    <div class="exit-badge">🎁</div>
+    <h2 id="exitTitle">Wacht even!</h2>
+    <p>Je staat op het punt een <strong style="color:#22c55e;">exclusieve aanbieding</strong> te missen.</p>
+
+    <div class="exit-benefits">
+      <div class="exit-benefit"><span class="check">✓</span>Tot $80 per uur verdienen</div>
+      <div class="exit-benefit"><span class="check">✓</span>$10 bonus bij aanmelding</div>
+      <div class="exit-benefit"><span class="check">✓</span>Directe uitbetaling via PayPal</div>
+    </div>
+
+    <button class="btn btn-primary" onclick="exitContinue()">
+      Ja, laat de aanbiedingen zien
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+    </button>
+
+    <button class="exit-leave" onclick="exitLeave()">Nee bedankt, afsluiten</button>
+  </div>
+</div>
+
+<script>
+  function showReassure() {
+    document.getElementById('ageScreen').classList.remove('active');
+    document.getElementById('reassureScreen').classList.add('active');
+  }
+
+  function goToLander() {
+    var target = (window.location.protocol === 'file:') ? 'index.html' : './';
+    window.location.href = target + window.location.search;
+  }
+
+  /* ===== Exit intent ===== */
+  (function(){
+    var overlay = document.getElementById('exitOverlay');
+    var shown = false;
+    var leaving = false;
+
+    function openExit() {
+      if (shown || leaving) return;
+      shown = true;
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeExit() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    // Back button intercept (mobile + desktop)
+    // Back / swipe-back intercept (mobile)
+    history.pushState({ exitGuard: true }, '', location.href);
+    window.addEventListener('popstate', function(){
+      if (!leaving) {
+        openExit();
+        history.pushState({ exitGuard: true }, '', location.href);
+      }
+    });
+
+    window.exitContinue = function(){
+      closeExit();
+      goToLander();
+    };
+    window.exitLeave = function(){
+      leaving = true;
+      closeExit();
+      history.go(-2); // step past the guard state and the current page
+      setTimeout(function(){ window.close(); }, 100);
+    };
+
+    overlay.addEventListener('click', function(e){
+      if (e.target === overlay) closeExit();
+    });
+  })();
+</script>
+
+</body>
+</html>
